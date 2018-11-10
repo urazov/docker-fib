@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t achliopa/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run achliopa/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t achliopa/multi-client ./client
+  - docker build -t achliopa/multi-nginx ./nginx
+  - docker build -t achliopa/multi-server ./server
+  - docker build -t achliopa/multi-worker ./worker
+  # log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # takes those images and push them to docker hub
+  - docker push achliopa/multi-client
+  - docker push achliopa/multi-nginx
+  - docker push achliopa/multi-server
+  - docker push achliopa/multi-worker
